@@ -7,17 +7,18 @@ Research first. No product decision has been made.
 
 ## What we actually know
 
-Everything below came from a raw fetch of the homepage on 2026-08-12. It is the
-site's own words, quoted, because that is all that is currently verified:
+The homepage is a **JavaScript shell** - 3,816 bytes, and the only text that
+renders without executing JS is the title. It has since been loaded properly in
+a headless browser, and the app behind it read directly from its own public REST
+API, its shipped JS bundle, and public chain RPC.
 
-> Sui's #1 hit music station. Stream live channels, discover artists, and tip
-> your favorites - powered by the Sui blockchain.
+**The teardown is in [`research/ignite-radio-teardown.md`](research/ignite-radio-teardown.md).**
+Raw API and on-chain snapshots are in `evidence/`.
 
-That is the whole verified set. The homepage is a **JavaScript shell** - 3,816
-bytes, and the only text that renders without executing JS is the title. So the
-channels, the artist pages, the tipping flow and the token mechanics are all
-still unknown, and nothing in this repo should claim otherwise until someone has
-actually loaded the app.
+Headline: a real, working platform with genuine creator supply, effectively zero
+listeners, effectively zero revenue, and a tipping feature that is broken in
+production. It runs on SQLite and a filesystem, and has no Move contract
+deployed at all.
 
 ## Why ZAO is looking
 
@@ -38,12 +39,15 @@ The interesting questions are therefore not "should we copy this" but:
 
 | # | Question | Status |
 |---|---|---|
-| 1 | What does the app look like past the JS shell? | unanswered |
-| 2 | Tipping mechanics - token, fee, custody, artist payout | unanswered |
-| 3 | Where the catalogue comes from and who cleared it | unanswered |
-| 4 | Real usage - listeners, artists, tip volume | unanswered |
-| 5 | Who is behind it, and are they reachable | unanswered |
-| 6 | Compete / integrate / ignore | blocked on 1-5 |
+| 1 | What does the app look like past the JS shell? | answered - full product, SQLite backend |
+| 2 | Tipping mechanics - token, fee, custody, artist payout | answered - bare SUI transfer, no contract, 0% fee, non-custodial, and currently broken |
+| 3 | Where the catalogue comes from and who cleared it | answered - 45% creator upload, 42% re-hosted Audius, rights self-attested |
+| 4 | Real usage - listeners, artists, tip volume | answered - 32 stations and 356 tracks vs 28 lifetime likes and a near-empty treasury; tip volume structurally unmeasurable |
+| 5 | Who is behind it, and are they reachable | answered - operated by Harmony Hub, reachable by email, Discord dead |
+| 6 | Compete / integrate / ignore | integrate, cheaply and specifically - see teardown |
+
+Remaining unknowns are listed at the end of the teardown and stay written as
+unknown.
 
 ## How to work in here
 
@@ -64,4 +68,6 @@ every ZAO product. This repo is the workbench; ZAOOS is the record.
 
 ## Status
 
-Created 2026-08-12. Nothing researched yet beyond the tagline above.
+Created 2026-08-12. Teardown completed 2026-08-12; all six questions answered.
+The durable doc has **not** been filed into ZAOOS `research/music/` yet, because
+ZAOOS is not cloned on this machine and the doc number could not be assigned.
