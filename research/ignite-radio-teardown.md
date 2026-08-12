@@ -230,8 +230,9 @@ and:
 
 - **Operator:** Harmony Hub, i.e. Harmony Hub LLC per the licensing page at
   harmonyhub.love, which Ignite's own footer links to for licensing.
-- **Contact:** `sweetharmonyhub@gmail.com` (terms, DMCA) and `hello@igniteradio.xyz`
-  (footer). Reachable by email; Discord is dead.
+- **Contact:** a Gmail address given in their Terms of Service for legal and DMCA
+  notices, plus a `hello@` address on their own domain in the site footer. Both are
+  published on their public pages; not reproduced here. Reachable by email; Discord is dead.
 - **Sibling product:** harmonyhub.love, "The social platform for Web3 creators", powered
   by Sui, Walrus and Seal. Notably Harmony Hub uses Walrus while Ignite Radio does not.
 - Payments accept crypto **or PayPal**.
@@ -257,7 +258,7 @@ Reasoning:
   `zaal` and display name "Zaal Panthaki". Zaal should confirm what is already agreed
   here before anything is proposed. Note their site writes it "WaveWarz", not WaveWarZ.
 
-**Concrete opening move:** email `sweetharmonyhub@gmail.com`, note that their tip button is
+**Concrete opening move:** email the contact address published in their Terms, note that their tip button is
 broken in production because `owner_id` is stripped from the public stations API, and use
 that as the opener. It is a genuinely useful, verifiable bug report that costs us nothing
 and demonstrates competence. The conversation to have after that is audience-for-supply,
