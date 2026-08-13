@@ -5,11 +5,31 @@
 **Status of this doc:** durable finding, ready to move to ZAOOS `research/music/` once a
 number is assigned. See "Where this goes" at the bottom.
 
+## Read this first: they are a partner
+
+**Ignite Radio sponsors WaveWarZ and is part of the onchain music family.** This document
+was researched and largely written before that was established, in a compete-or-integrate
+frame that turned out to be the wrong question. The facts below all stand and were
+re-verified; the framing in Q6 has been corrected, and nothing here should be read as
+sizing up a rival.
+
+The partner-facing output of this work is **`founder-share.md`** in this repo - the
+findings worth sending to them, written to be useful rather than clever.
+
 ## One-line answer
 
-Ignite Radio is a real, working, modestly-populated indie radio platform with a genuine
-creator base and effectively zero listeners, zero revenue, and a tipping feature that
-does not currently work in production.
+Ignite Radio is a real, working indie radio platform with roughly a dozen genuinely active
+artists, an audience that is mostly those same artists plus the operator's own accounts,
+almost no revenue, and a tipping feature that does not work in production.
+
+Researched in two passes on 2026-08-12. The second pass found their per-station stats
+endpoint, which **corrected the engagement numbers upward** and sharpened the audience
+finding considerably. Corrections are marked inline rather than quietly overwritten.
+
+**Re-verified 2026-08-12 against their current build** (`g2-index-Bs0eLnht.js`), which
+shipped during the research. The tip bug, the client-side API key and the dead Discord
+invite all persist in the live build. One station, "The Forgotten Child Station", was
+removed between passes, taking the count from 32 to 31.
 
 ## How this was grounded
 
@@ -18,12 +38,17 @@ from `WebFetch`:
 
 | Method | What it gave |
 |---|---|
-| Headless browser (`/browse`) | Rendered DOM, live click-through of the tip flow |
-| Their own public REST API (`curl`) | `/api/stations`, `/api/profiles`, `/api/likes/trending`, `/api/health` |
-| Their shipped JS bundle (`curl` + read) | Exact tipping source code, hardcoded treasury addresses |
+| Headless browser (`/browse`) | Rendered DOM, live click-through of the tip flow, pricing pages |
+| Their own public REST API (`curl`) | `/api/stations`, `/api/profiles`, `/api/stats/:id`, `/api/stations/:id/fanclub`, `/api/likes/trending`, `/api/health` |
+| Their shipped JS bundle, all 71 chunks (`curl` + read) | Exact tipping source, full API surface, hardcoded treasury addresses |
 | Public chain RPC (`curl`) | Sui, Base, Ethereum, Polygon, Solana treasury state |
 
 Raw snapshots are committed under `evidence/`.
+
+**Scope limit I held to:** only public, unauthenticated endpoints were read. Their admin
+routes were found in the bundle and deliberately not probed, and no account was created to
+reach auth-gated surfaces. Testing someone else's access controls uninvited is not
+research, and a few extra data points are not worth doing it.
 
 Every claim below is marked **FULL** (directly observed) or **PARTIAL** (strongly
 supported but with a stated gap). Nothing here is inferred from a summary.
@@ -167,16 +192,70 @@ representation-and-warranty clause.
 
 This is not a landing page and not a ghost town of bots.
 
-### Demand is close to nil
+### Demand: an audience of about a dozen, half of them staff
 
-- **28 total likes, platform-wide, all time**, spread over 26 tracks. The most-liked track
-  has 2 likes. 12 of the 28 landed on a single day (2026-08-06), consistent with one
-  person clicking through the catalogue in one session.
-- **Every one of the 53 profiles reports `followers: 0, following: 0, contentCount: 0,
-  totalEarnings: 0`.** Not one non-zero stat anywhere.
+A second research pass found a per-station stats endpoint, `GET /api/stats/:id`, which is
+unauthenticated and returns real engagement counters. Swept across all 32 stations:
+
+| Metric | Platform total |
+|---|---|
+| Likes | 385 |
+| Unique listeners (summed per station) | 119 |
+| Engagement events | 825 |
+| Fanclub memberships | 72 |
+
+The listener figure is **summed per station, so it double-counts** anyone who visited more
+than one. It is an upper bound on distinct people, not a headcount.
+
+**The fanclub data is the sharpest signal, because members are named.** Those 72
+memberships resolve to just **13 distinct people**. The distribution:
+
+| Account | Clubs joined |
+|---|---|
+| `harmonyhub` (operator) | 23 |
+| `sweetharmonyhub` (operator) | 11 |
+| `stormbournedesigns` | 10 |
+| `fellenz` | 7 |
+| `mozaycalloway` | 7 |
+| everyone else (8 accounts) | 14 combined |
+
+The operator's own two accounts account for **34 of 72 memberships, 47%**. The rest are
+station owners joining each other's clubs. This is the signature of an empty network:
+creators cross-subscribing, with essentially no outside audience behind them. The operator
+runs at least four accounts in total - `harmony_hub`, `harmonyhub`, `sweetharmonyhub` and
+`igniteradio`.
+
+Other signals:
+
+- Every one of the 53 profiles reports `followers: 0, following: 0, contentCount: 0,
+  totalEarnings: 0`. The `totalEarnings` zero is structural, per Q2 - the backend cannot
+  see tips.
 - 1 of 53 profiles is verified.
+- `GET /api/stations/:id/geo` returns `{"countries":[]}` for the stations checked - no
+  geographic listener data has accumulated.
 - `/api/global-signals` returns `[]`.
 - No station has ever been live: `is_live` is false for all 32.
+
+### CORRECTION to the first pass, and a counter that contradicts itself
+
+The first pass reported "28 total likes platform-wide, all time". **That was the wrong
+counter.** It came from `GET /api/likes/trending`, which is a different and much sparser
+dataset than the per-station `likes` in `/api/stats/:id`.
+
+The two disagree by more than an order of magnitude, and not by a constant factor:
+
+- `/api/likes/trending?limit=500` returns 29 rows totalling 31 likes.
+- Per-station `/api/stats/:id` likes sum to 385.
+- Velvet Rebellion reports **126 likes** in stats and has **zero** tracks appearing in
+  trending at all.
+
+I could not determine from outside which counter is authoritative, and I am not guessing.
+Both are reported above. The honest reading is that **385 is the more generous figure and
+still small**, and that their own engagement counters are mutually inconsistent - which is
+itself a finding about data quality.
+
+One further caveat: my own session contributed to these numbers. Loading `/ignite` played
+audio, awarded points, and registered listener events. The counts include me.
 
 ### Money, measured on-chain
 
@@ -218,6 +297,91 @@ The rewards system is off-chain points in SQLite. `GET /api/points` returns tier
 (Spark, Ember, ...) and awards 25 points for a daily visit. No coin type, no package, no
 on-chain component anywhere in the rewards chunk.
 
+## What they charge - ANSWERED (FULL)
+
+Their whole monetization surface, quoted from the pages:
+
+- **Advertising:** "Record or upload your spot. For $10 it runs in the Live Mix rotation
+  for 30 days."
+- **Shoutouts:** "Record or upload a short shoutout. For $2 it airs on the Ignite Community
+  Channel."
+
+Payment is crypto or PayPal (`/api/paypal-orders` exists alongside the chain rails).
+
+Every ad slot currently rendered on the advertise page is a placeholder - "Your Business
+Here", "Your Flyer Here", "Blaze designs it for you". No real advertiser is running.
+
+Set against the treasury numbers below, this is the entire business: $2 and $10 line
+items, of which almost none have been sold.
+
+## The API surface, and one security note
+
+The app's endpoints were enumerated from the shipped bundle rather than guessed. Beyond
+the read endpoints already cited, it includes `/api/import/audius` and
+`/api/import/audius/preview?handle=` (so Audius import is a first-class product feature,
+not an ad-hoc backfill), `/api/stations/:id/fanclub` and `/fanclub/join`,
+`/api/listener/heartbeat` and `/listener/disconnect`, `/api/reels/generate` and
+`/reels/candidates`, `/api/stations/:id/geo`, `/api/shoutouts`, `/api/ads`,
+`/api/paypal-orders`, `/api/cpm/signup`, and `/api/assistant`.
+
+Two things worth recording:
+
+1. **They do protect the privileged route.** `GET /api/stations/:id/analytics` returns
+   `403 {"error":"Unauthorized"}`. Admin routes (`/api/admin/overview`,
+   `/api/admin/isrc-report`) exist in the bundle; I did **not** probe them, because
+   testing someone else's access controls without permission is not research.
+2. **A static `x-api-key` is hardcoded in the client bundle** and sent with write calls
+   such as `POST /api/likes`. Any visitor can read it out of the JavaScript. The value is
+   deliberately not reproduced in this doc or in `evidence/`. This is worth telling them
+   about; see the outreach note in Q6.
+
+## CPM Collabs - the piece closest to ZAO's own model
+
+"Community Powered Music" is a collaboration-matching program on the AM/instrumentals
+side. Its stated terms, quoted from the page:
+
+> creators keep 100% ownership of their work, collaboration splits are agreed in writing
+> before anything mints, community participation is economic only, and signing up collects
+> no funds and creates no obligation
+
+with "CREATORS - 50%" and "Five community slots - locked by agreement before mint - no
+pre-mint funds".
+
+It is currently a **signup form** posting to `/api/cpm/signup`, gated behind manual review
+("We review every sign-up and connect compatible collaborators"). So it is an intention,
+not a shipped mechanic. It is nonetheless the part of their product that overlaps most
+directly with what ZAO does with artist splits, and the part most worth watching.
+
+## The parent: Harmony Hub - PARTIAL
+
+Ignite Radio's licensing link points at harmonyhub.love, and the Terms name Harmony Hub as
+the operator, so the parent was examined too.
+
+Harmony Hub presents as infrastructure: "The Harmony Provenance Standard", "The Gold
+Standard for Digital Reality", "We created the protocol for truth", "Powered by Sui,
+Walrus, Seal". Two observations undercut that framing:
+
+1. **The provenance demo is a mockup.** The verification panel renders
+   `Hash: 0x[REDACTED_FOR_SECURITY]` next to `Status: AUTHENTICITY CONFIRMED`. That is
+   static placeholder text, not a live verification.
+2. **The bundle ships seeded fake verified creators.** Four hardcoded profiles -
+   `lunarwave`, `nebula.natalie`, `codecrafter`, `orchestra.ai` - each with
+   `isVerified: true`, Unsplash stock photos, invented bios, and fabricated stats
+   (`followers: 1840, contentCount: 64, totalEarnings: 1290` on one; `contentCount: 85,
+   totalEarnings: 2980` on another). Their `walletAddress` values are checked against Sui
+   mainnet and **none of the four exist**. They are seeded into localStorage under the key
+   `harmonyProfiles`.
+
+**PARTIAL, and the caveat matters:** seed data in a client bundle is ordinary for a
+pre-launch product, and I could not confirm whether these profiles are ever displayed to
+users as real. The harmonyhub.love homepage would not render in my headless browser. It
+threw `TypeError: I is not a function`, but that came after a WebGL context failure caused
+by my having no GPU, so **that crash is most likely an artifact of my environment and
+should not be reported as their bug.** The `/catalogs` route rendered fine.
+
+Also worth noting: like Ignite Radio, **Harmony Hub has no deployed Move package either**.
+The only `moveCall` in its 1.6 MB bundle is the same SDK-internal `0x1::option` helper.
+
 ## Q5. Who is behind it - ANSWERED (FULL)
 
 From their Terms of Service, effective July 5, 2026:
@@ -237,36 +401,47 @@ and:
   by Sui, Walrus and Seal. Notably Harmony Hub uses Walrus while Ignite Radio does not.
 - Payments accept crypto **or PayPal**.
 
-## Q6. Compete, integrate, or ignore - now answerable
+## Q6. Compete, integrate, or ignore - the question was wrong
 
-**Recommendation: integrate, cheaply and specifically. Do not compete, and do not ignore.**
+**This question is void, and the doc was written before we knew it.** Ignite Radio
+**sponsors WaveWarZ** and is part of the onchain music family. They are a partner, not a
+target to be evaluated. The `/wavewarz` page linking out to `wavewarz.com` is not a
+curiosity to investigate - it is the sponsorship, visible from outside.
 
-Reasoning:
+Re-framed, the useful question is: **what does a partner need from us, and what do we
+now know that helps them?**
 
-- **Do not compete.** There is nothing here to beat technically. The tipping "mechanic" is
-  eight lines of SDK boilerplate with no contract behind it. Any ZAO surface could ship the
-  same thing in an afternoon on Base or Solana. Sui buys them nothing we would want -
-  their storage is a filesystem, their database is SQLite, their rewards are off-chain
-  points, and their own EVM rails have never been used. The chain is branding.
-- **Do not ignore.** The asset is the roster. 32 independent artists and 53 profiles who
-  chose to show up and upload 356 tracks to an unknown platform is real, hard-won creator
-  supply - exactly the thing ZAO spends effort on. Their problem is the opposite of ours
-  in kind: they have supply and no audience.
-- **A relationship already exists.** Their sidebar has a WaveWarz page that links out to
-  `wavewarz.com`, describing it as "Live music battles you can trade ... artists get paid
-  on every trade". There is a `fellenz` profile and station, and a profile with handle
-  `zaal` and display name "Zaal Panthaki". Zaal should confirm what is already agreed
-  here before anything is proposed. Note their site writes it "WaveWarz", not WaveWarZ.
+What the research supports, restated for that frame:
 
-**Concrete opening move:** email the contact address published in their Terms, note that their tip button is
-broken in production because `owner_id` is stripped from the public stations API, and use
-that as the opener. It is a genuinely useful, verifiable bug report that costs us nothing
-and demonstrates competence. The conversation to have after that is audience-for-supply,
-not technology.
+- **Their constraint is audience, not product or technology.** The engaged core is about
+  a dozen people, and the two operator accounts are 47% of all fanclub activity. That is
+  not a knock - creator supply is the hard half and they have it. It is the specific
+  asymmetry that makes the relationship worth more than a logo swap.
+- **The tipping design is values-correct.** Non-custodial, zero fee, artist keeps 100%.
+  It is architecturally minimal, but it is minimal in the right direction.
+- **They are shipping.** They pushed a new bundle mid-research and added a station the day
+  we looked.
+- **Their CPM Collabs model is the natural collaboration surface** - creators keep 100%,
+  splits agreed in writing before mint. That is close to how ZAO handles artist splits,
+  and it is where a joint design conversation would actually go somewhere.
 
-**What would change this call:** if their listener numbers are real but simply not exposed
-through the likes/points surface. Nothing observed suggests that, but engagement was
-measured through their own counters, which could be under-instrumented.
+**What we owe them:** the findings that are useful and hard to see from the inside.
+Written up in `founder-share.md` in this repo - the dead tip button, the client-side API
+key, and the fact that tips are unmeasurable by construction so every artist sees
+`totalEarnings: 0`. That last one is the highest-value item for them and is a design
+suggestion, not a bug report.
+
+**How to send it:** privately, directly, and with the API key value handed over
+out-of-band rather than written down. Not as a cold opener - we already have the
+relationship - but as what a partner does after spending a day in someone's product.
+
+**Note on the brand:** their site writes it "WaveWarz". Ours is WaveWarZ. Minor, but if
+they are a sponsor the wordmark is worth getting right on both sides.
+
+**What would change this call:** if a large listener base exists but is invisible to the
+counters I could reach. The second pass makes that less likely - `/api/stats/:id` is their
+own instrumentation and it reports double-digit listeners per station - but every number
+here still comes from counters they wrote, and I cannot audit what those counters miss.
 
 ---
 
@@ -274,21 +449,22 @@ measured through their own counters, which could be under-instrumented.
 
 Written as unknown, not filled in.
 
-- Actual listener counts. There is no plays or listens counter in any public endpoint.
+- **Distinct platform-wide listeners.** The per-station figure double-counts, so 119 is an
+  upper bound, and the true number is unknown. The 13 named fanclub members are the only
+  hard headcount available.
+- **Which like counter is authoritative.** Trending says 31, per-station stats say 385, and
+  they cannot both be right.
 - Tip volume. Structurally unmeasurable while tips are bare transfers.
-- Whether `@igniteradio_sui` exists.
+- Whether `@igniteradio_sui` exists. Two methods failed to confirm it; logged-out X blocks
+  are common enough that I will not call it deleted.
 - Whether an agreement already exists between Harmony Hub and ZAO regarding the WaveWarz
   placement.
-- Team size and identities beyond the Harmony Hub entity and its contact email.
-- Whether `owner_id` is exposed on any authenticated Studio endpoint, which would mean
-  tipping works for signed-in owners viewing their own station.
-
-## Where this goes
-
-The durable home for this is ZAOOS `research/music/` as a numbered doc. **ZAOOS is not
-cloned on this machine**, so the number could not be assigned and the doc could not be
-filed there. This file is written to be moved as-is once someone with ZAOOS checked out
-assigns the next number.
+- Team size and identities beyond the Harmony Hub entity and its contact addresses.
+- Whether `owner_id` is exposed on an authenticated Studio endpoint, which would mean
+  tipping works for signed-in owners even though it is dead for the public. Not tested:
+  it needs an account, and creating one to probe their auth-gated surface goes past
+  reading a public site.
+- Whether Harmony Hub's seeded demo profiles are ever shown to users as real.
 
 ## Evidence
 
