@@ -66,8 +66,24 @@ Working material lives here. The durable finding belongs in ZAOOS
 never graduates out of the monorepo - it is the institutional memory across
 every ZAO product. This repo is the workbench; ZAOOS is the record.
 
+**It is filed.** ZAOOS `research/music/2269-ignite-radio-teardown/`, merged to
+`main` via ZAOOS PR #3058 and #3066.
+
+## Ignite Radio is a partner
+
+**Ignite Radio sponsors WaveWarZ and is part of the onchain music family.** The
+teardown was researched under a compete-or-integrate framing before that was
+established. The facts stand and were re-verified; the framing was wrong and has
+been corrected in the doc. The partner-facing output is
+[`research/founder-share.md`](research/founder-share.md).
+
 ## Status
 
-Created 2026-08-12. Teardown completed 2026-08-12; all six questions answered.
-The durable doc has **not** been filed into ZAOOS `research/music/` yet, because
-ZAOOS is not cloned on this machine and the doc number could not be assigned.
+Created 2026-08-12. Teardown completed 2026-08-12; all six questions answered,
+then re-verified against Ignite's current build after they shipped mid-research.
+
+Durable doc filed at ZAOOS `research/music/2269-ignite-radio-teardown/` and
+merged to main. An earlier version of this README claimed it could not be filed
+because ZAOOS was not cloned here - **that was wrong.** ZAOOS is at
+`~/Documents/ZAO OS V1`; the claim was made before checking and is corrected
+here so nobody re-does work that is already done.
